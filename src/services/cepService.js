@@ -1,21 +1,26 @@
-import { httpClient } from "../infra/httpClient.js";
 import { API_ENDPOINTS } from "../config/constants.js";
-import { logger } from "../utils/logger.js";
+import { httpClient } from "../infra/httpClient.js";
+
+const cepCache = new Map();
 
 export async function fetchCepData(cep) {
+  if (cepCache.has(cep)) {
+    return cepCache.get(cep);
+  }
+
   try {
     const { data } = await httpClient.get(API_ENDPOINTS.VIA_CEP(cep));
 
-    if (data.erro) {
-      return { city: null, state: null };
-    }
+    const result = data.erro
+      ? { city: null, state: null }
+      : { city: data.localidade, state: data.uf };
 
-    return {
-      city: data.localidade,
-      state: data.uf
-    };
-  } catch (error) {
-    logger.warn(`Failed to fetch CEP ${cep}`);
-    return { city: null, state: null };
+    cepCache.set(cep, result);
+    return result;
+
+  } catch {
+    const fallback = { city: null, state: null };
+    cepCache.set(cep, fallback);
+    return fallback;
   }
 }
