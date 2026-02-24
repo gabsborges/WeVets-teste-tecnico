@@ -1,39 +1,26 @@
 import { userCepMap } from "../../config/constants.js";
 import { fetchCepData } from "../../infra/repositories/cepApi.js";
+import { logger } from "../../utils/logger.js";
 
 const CONCURRENCY_LIMIT = 5;
 
-/**
- * @typedef {Object} PostOutput
- * @property {number} postId
- * @property {string} title
- * @property {string} authorName
- * @property {string} authorEmail
- * @property {string} cep
- * @property {string|null} city
- * @property {string|null} state
- */
-
-async function asyncPool(poolLimit, array, iteratorFn) {
-  const ret = [];
+async function asyncPool(limit, array, iteratorFn) {
+  const results = [];
   const executing = [];
 
   for (const item of array) {
-    const p = Promise.resolve().then(() => iteratorFn(item));
-    ret.push(p);
+    const p = iteratorFn(item);
+    results.push(p);
 
-    const e = p.then(() => {
-      executing.splice(executing.indexOf(e), 1);
-    });
-
+    const e = p.finally(() => executing.splice(executing.indexOf(e), 1));
     executing.push(e);
 
-    if (executing.length >= poolLimit) {
+    if (executing.length >= limit) {
       await Promise.race(executing);
     }
   }
 
-  return Promise.all(ret);
+  return Promise.allSettled(results);
 }
 
 function buildPostOutput(post, author, cep, address) {
@@ -51,30 +38,30 @@ function buildPostOutput(post, author, cep, address) {
 /**
  * @param {Array<any>} posts
  * @param {Array<any>} users
- * @returns {Promise<PostOutput[]>}
  */
 export async function enrichPosts(posts, users) {
   const userMap = new Map(users.map(u => [u.id, u]));
 
-  const results = await asyncPool(CONCURRENCY_LIMIT, posts, async (post) => {
-    if (!post || !post.id || !post.userId) return null;
+  const settledResults = await asyncPool(CONCURRENCY_LIMIT, posts, async (post) => {
+    if (!post?.id || !post?.userId) return null;
 
     const author = userMap.get(post.userId);
-    if (!author || !author.email || !author.name) return null;
+    if (!author?.name || !author?.email) return null;
 
     const cep = userCepMap[author.id];
     if (!cep) return null;
 
     let address = { city: null, state: null };
-
     try {
       address = await fetchCepData(cep);
-    } catch {
-
+    } catch (err) {
+      logger.warn(`Failed to fetch CEP for user ${author.id}: ${cep}`);
     }
 
     return buildPostOutput(post, author, cep, address);
   });
 
-  return results.filter(Boolean);
+  return settledResults
+    .filter(r => r.status === "fulfilled" && r.value)
+    .map(r => r.value);
 }
