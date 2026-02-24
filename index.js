@@ -1,25 +1,18 @@
-import { fetchPosts } from "./src/infra/repositories/postService.js";
-import { fetchUsers } from "./src/infra/repositories/userService.js";
-import { processPosts } from "./src/processors/postProcessor.js";
+import { generateReport } from "./src/application/generateReport.js";
 import { writeJsonFile } from "./src/infra/file/fileWriter.js";
 import { logger } from "./src/utils/logger.js";
 
 async function main() {
   try {
-    logger.info("Starting data aggregation process...");
+    logger.info("Starting report generation...");
 
-    const [posts, users] = await Promise.all([
-      fetchPosts(),
-      fetchUsers()
-    ]);
+    const data = await generateReport();
 
-    const processed = await processPosts(posts, users);
+    await writeJsonFile("./output/data.json", data);
 
-    await writeJsonFile("./output/data.json", processed);
-
-    logger.info("Process finished successfully.");
+    logger.info("Report generated successfully.");
   } catch (error) {
-    logger.error("Fatal error during execution", error);
+    logger.error("Fatal error", error);
     process.exit(1);
   }
 }
