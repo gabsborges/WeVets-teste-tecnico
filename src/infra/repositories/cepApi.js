@@ -4,9 +4,7 @@ import { httpClient } from "../http/httpClient.js";
 const cepCache = new Map();
 
 export async function fetchCepData(cep) {
-  if (cepCache.has(cep)) {
-    return cepCache.get(cep);
-  }
+  if (cepCache.has(cep)) return cepCache.get(cep);
 
   try {
     const { data } = await httpClient.get(API_ENDPOINTS.VIA_CEP(cep));
