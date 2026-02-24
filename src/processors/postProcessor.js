@@ -1,3 +1,4 @@
+import pLimit from "p-limit";
 import { userCepMap } from "../config/constants.js";
 import { fetchCepData } from "../services/cepService.js";
 
@@ -5,8 +6,11 @@ import { fetchCepData } from "../services/cepService.js";
 export async function processPosts(posts, users) {
   const userMap = new Map(users.map(user => [user.id, user]));
 
+    const limit = pLimit(5);
+
   const processed = await Promise.all(
-    posts.map(async (post) => {
+  posts.map(post =>
+    limit(async () => {
       const author = userMap.get(post.userId);
       const cep = userCepMap[author.id];
 
@@ -21,7 +25,7 @@ export async function processPosts(posts, users) {
         city,
         state
       };
-    })
+    }))
   );
 
   return processed;
