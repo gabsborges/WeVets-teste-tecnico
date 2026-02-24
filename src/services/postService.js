@@ -1,6 +1,5 @@
-import { API_ENDPOINTS } from "../config/constants";
-import { httpClient } from "../infra/httpClient";
-
+import { httpClient } from "../infra/httpClient.js";
+import { API_ENDPOINTS } from "../config/constants.js";
 
 export async function fetchPosts() {
   const { data } = await httpClient.get(API_ENDPOINTS.POSTS);

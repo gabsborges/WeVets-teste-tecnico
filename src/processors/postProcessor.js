@@ -1,5 +1,5 @@
-import { userCepMap } from "../config/constants";
-import { fetchCepData } from "../services/cepService";
+import { userCepMap } from "../config/constants.js";
+import { fetchCepData } from "../services/cepService.js";
 
 
 export async function processPosts(posts, users) {
