@@ -1,7 +1,7 @@
-import { fetchPosts } from "./src/services/postService.js";
-import { fetchUsers } from "./src/services/userService.js";
+import { fetchPosts } from "./src/infra/repositories/postService.js";
+import { fetchUsers } from "./src/infra/repositories/userService.js";
 import { processPosts } from "./src/processors/postProcessor.js";
-import { writeJsonFile } from "./src/infra/fileWriter.js";
+import { writeJsonFile } from "./src/infra/file/fileWriter.js";
 import { logger } from "./src/utils/logger.js";
 
 async function main() {

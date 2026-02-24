@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 import { userCepMap } from "../config/constants.js";
-import { fetchCepData } from "../services/cepService.js";
+import { fetchCepData } from "../infra/repositories/cepService.js";
 
 
 export async function processPosts(posts, users) {

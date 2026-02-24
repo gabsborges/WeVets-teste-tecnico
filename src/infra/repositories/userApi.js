@@ -1,5 +1,5 @@
-import { API_ENDPOINTS } from "../config/constants.js";
-import { httpClient } from "../infra/httpClient.js";
+import { API_ENDPOINTS } from "../../config/constants.js";
+import { httpClient } from "../http/httpClient.js";
 
 
 export async function fetchUsers() {
